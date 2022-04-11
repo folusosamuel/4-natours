@@ -5,16 +5,6 @@ const __dirname = "./";
 app.use(express.json()); // this is a middleware And middleware is basically a function
 //that can modify the incoming request data. Used for POST request
 
-// app.get("/", (req, res) => {
-//   res
-//     .status(200)
-//     .json({ message: "Hello from the server side", app: "Natours" });
-// });
-
-// app.post("/", (req, res) => {
-//   res.send("You can post to this endpoint....");
-// });
-
 const tours = JSON.parse(
   fs.readFileSync(
     `${__dirname}/starter/dev-data/data/tours-simple.json`,
@@ -27,7 +17,7 @@ const tours = JSON.parse(
   )
 );
 
-app.get("/api/v1/tours", (req, res) => {
+const getAllTours = (req, res) => {
   res.status(200).json({
     status: "success",
     results: tours.length,
@@ -35,13 +25,28 @@ app.get("/api/v1/tours", (req, res) => {
       tours,
     },
   });
-});
+};
 
-//lets define a route which can accept variable
-// we could have app.get("/api/v1/tours/:id/:x/:y?" the "?" makes it optional parameters
-//the id can be anything. It is just a variable
-app.get("/api/v1/tours/:id", (req, res) => {
-  console.log(req.params); //params (parameters) is where all the variables defined in the "id" are stored
+const createTour = (req, res) => {
+  const newId = tours[tours.length - 1].id + 1;
+  const newTour = Object.assign({ id: newId }, req.body); //create new object with the new id and body
+  tours.push(newTour); //push the new object into the existing array of objects
+
+  fs.writeFile(
+    `${__dirname}/dev-data/data/tours-simple.json`,
+    JSON.stringify(tours),
+    (err) => {
+      res.status(201).json({
+        status: "success",
+        data: {
+          tour: newTour,
+        },
+      });
+    }
+  );
+};
+
+const getTour = (req, res) => {
   const id = req.params.id * 1; //convert the params numbers which are strings into number by multiplying by 1
   const tour = tours.find((el) => el.id === id);
 
@@ -58,34 +63,9 @@ app.get("/api/v1/tours/:id", (req, res) => {
       tours: tour, //or simply use "tour" only on this line
     },
   });
-});
+};
 
-app.post("/api/v1/tours", (req, res) => {
-  // console.log(req.body);
-  const newId = tours[tours.length - 1].id + 1; //create a new ID serial to the existing id numbers
-  const newTour = Object.assign({ id: newId }, req.body); //create new object with the new id and body
-  tours.push(newTour); //push the new object into the existing array of objects
-  //post body will be created in postman while id is automatically calculated and inserted based on the
-  //id generation conde above
-
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      res.status(201).json({
-        status: "success",
-        data: {
-          tour: newTour,
-        },
-      });
-    }
-  );
-});
-
-/*with put, we expect that our application receives the entire new updated object,
-and with patch, we only expect the properties app.
-*/
-app.patch("/api/v1/tours/:id", (req, res) => {
+const updateTour = (req, res) => {
   if (req.params.id * 1 > tours.length) {
     return res.status(404).json({
       status: "fail",
@@ -98,7 +78,36 @@ app.patch("/api/v1/tours/:id", (req, res) => {
       tour: "<Updated tour here...>",
     },
   });
-});
+};
+
+const deleteTour = (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: "fail",
+      message: "invalid ID",
+    });
+  }
+  res.status(204).json({
+    status: "success",
+    data: {
+      tour: null,
+    },
+  });
+};
+
+// app.get("/api/v1/tours", getAllTours);
+// app.post("/api/v1/tours", createTour);
+// app.get("/api/v1/tours/:id", getTour);
+// app.patch("/api/v1/tours/:id", updateTour);
+// app.delete("/api/v1/tours/:id", deleteTour);
+
+app.route("/api/v1/tours").get(getAllTours).post(createTour);
+
+app
+  .route("/api/v1/tours/:id")
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 const port = 3000;
 app.listen(port, () => {
