@@ -82,6 +82,24 @@ app.post("/api/v1/tours", (req, res) => {
   );
 });
 
+/*with put, we expect that our application receives the entire new updated object,
+and with patch, we only expect the properties app.
+*/
+app.patch("/api/v1/tours/:id", (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: "fail",
+      message: "invalid ID",
+    });
+  }
+  res.status(200).json({
+    status: "success",
+    data: {
+      tour: "<Updated tour here...>",
+    },
+  });
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`App running on port  $(port)....`);
