@@ -4,6 +4,9 @@ import morgan from "morgan";
 const app = express();
 const __dirname = "./";
 
+const tourRouter = express.Router();
+const userRouter = express.Router();
+
 //1. MIDDLEWARES
 app.use(morgan("dev"));
 app.use(express.json());
@@ -144,28 +147,23 @@ const deleteUser = (req, res) => {
     message: "This route is not yet defined!",
   });
 };
-// app.get("/api/v1/tours", getAllTours);
-// app.post("/api/v1/tours", createTour);
-// app.get("/api/v1/tours/:id", getTour);
-// app.patch("/api/v1/tours/:id", updateTour);
-// app.delete("/api/v1/tours/:id", deleteTour);
 
 //3. ROUTE
-app.route("/api/v1/tours").get(getAllTours).post(createTour);
+//We create a router for each resource. Ex: When the request hits tours,
+// it will be managed by tourRouter.
+//Tours
+app.use("/api/v1/tours", tourRouter);
 
-app
-  .route("/api/v1/tours/:id")
-  .get(getTour)
-  .patch(updateTour)
-  .delete(deleteTour);
+tourRouter.route("/").get(getAllTours).post(createTour);
 
-app.route("/api/v1/users").get(getAllUsers).post(createUser);
+tourRouter.route("/:id").get(getTour).patch(updateTour).delete(deleteTour);
 
-app
-  .route("/api/v1/users/:id")
-  .get(getUser)
-  .patch(updateUser)
-  .delete(deleteUser);
+//Users
+app.use("/api/v1/users", userRouter);
+
+userRouter.route("/").get(getAllUsers).post(createUser);
+
+userRouter.route("/:id").get(getUser).patch(updateUser).delete(deleteUser);
 
 //4. START SERVER
 const port = 3000;
